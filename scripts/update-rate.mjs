@@ -15,7 +15,7 @@ async function fromDolarApi() {
 }
 
 async function fromBcv() {
-  const res = await fetch("https://www.bcv.org.ve/", { headers: { "user-agent": "Mozilla/5.0 gramercy-rate-bot" } });
+  const res = await fetch("https://www.bcv.org.ve/", { headers: { "user-agent": "Mozilla/5.0 tienda-rate-bot" } });
   if (!res.ok) throw new Error(`BCV respondió ${res.status}`);
   const html = await res.text();
   const block = html.match(/id="euro"[\s\S]*?<strong>\s*([\d.,]+)\s*<\/strong>/);

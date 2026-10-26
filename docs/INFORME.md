@@ -1,4 +1,4 @@
-# Gramercy — informe de mejoras
+# Tienda — informe de mejoras
 
 Fecha: 26 de octubre de 2026. Alcance: bloques A, B, D, E y F del plan maestro. El bloque C (backend) queda como propuesta, porque necesita tu aprobación y decidir dónde alojarlo.
 
@@ -28,7 +28,7 @@ No había backend, pasarela de pago, inventario ni panel administrativo.
 
 - **Datos del negocio en `config.js`.** WhatsApp `584123307641` (+58 412-3307641), envío, métodos de pago, políticas y catálogo con disponibilidad por variante. Un valor en `null` se muestra como «se confirma por WhatsApp»; no se inventa nada.
 - **WhatsApp validado** (10 a 15 dígitos). Si el número no es válido, la tienda oculta el botón de WhatsApp y deja solo «Copiar pedido».
-- **Nuevo flujo:** Carrito → **Continuar con pedido** → Datos de entrega y método de pago → **Revisar y enviar pedido** → Pedido con referencia `GR-AAMMDD-XXXX` → **Enviar por WhatsApp** (enlace real `wa.me`, no `window.open`) o **Copiar pedido**.
+- **Nuevo flujo:** Carrito → **Continuar con pedido** → Datos de entrega y método de pago → **Revisar y enviar pedido** → Pedido con referencia `PED-AAMMDD-XXXX` → **Enviar por WhatsApp** (enlace real `wa.me`, no `window.open`) o **Copiar pedido**.
 - **Ningún texto promete un pago.** El pedido se crea en estado «Por enviar a la tienda». Pasa a «Enviado · esperando confirmación de la tienda» solo cuando el cliente pulsa «Sí, ya lo envié». El estado del pago siempre dice «Pendiente de confirmación».
 - **El carrito se vacía solo cuando el cliente confirma que envió el mensaje**, no al generar el pedido.
 - **Sin duplicados:** repetir el envío con el mismo carrito y los mismos datos reutiliza la misma referencia.

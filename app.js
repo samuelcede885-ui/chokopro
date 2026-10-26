@@ -1,4 +1,4 @@
-// Gramercy — tienda de una página: portada, producto, carrito, datos del pedido y confirmación.
+// Tienda de una página: portada, producto, carrito, datos del pedido y confirmación.
 // Los datos del negocio (WhatsApp, envío, pagos, catálogo) están en config.js.
 
 const ICONS = {
@@ -65,7 +65,7 @@ window.dataLayer = window.dataLayer || [];
 const track = (event, data = {}) => window.dataLayer.push({ event, ...data });
 
 // ---------- Estado guardado en este navegador ----------
-const KEYS = { cart: "gramercy-cart", form: "gramercy-checkout", orders: "gramercy-orders", rate: "gramercy-rate" };
+const KEYS = { cart: "tienda-cart", form: "tienda-checkout", orders: "tienda-orders", rate: "tienda-rate" };
 const load = (k, fallback) => { try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch (e) { return fallback; } };
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
@@ -190,7 +190,7 @@ function toast(msg, action) {
 }
 
 function setMeta(title, description) {
-  document.title = title ? `${title} · Gramercy` : "Gramercy";
+  document.title = title ? `${title} · Tienda` : "Tienda";
   if (description) document.querySelector('meta[name="description"]').setAttribute("content", description);
 }
 
@@ -202,7 +202,7 @@ function renderHome() {
   const s = SLIDES[slideIndex];
   const p = CATALOG[s.product];
   const o = optionOf(p, s.option);
-  setMeta("", "Gramercy — lentes blue light y Quarter Zip Polo Ralph Lauren en Caracas. Pedidos por WhatsApp.");
+  setMeta("", "Lentes blue light y Quarter Zip Polo Ralph Lauren en Caracas. Pedidos por WhatsApp.");
   app.innerHTML = `
     <section class="hero">
       <div class="swap">
@@ -697,7 +697,7 @@ function createOrder() {
   const rand = Array.from(crypto.getRandomValues(new Uint8Array(3)), (b) => b.toString(36).padStart(2, "0")).join("").slice(-4).toUpperCase();
   const t = totals();
   const order = {
-    id: `GR-${ymd}-${rand}`,
+    id: `PED-${ymd}-${rand}`,
     fp,
     createdAt: d.toISOString(),
     status: "draft",
@@ -724,7 +724,7 @@ function orderMessage(o) {
     return `• ${l.qty} × ${p.name} — ${variantText(p, opt)} — ${money(l.price)} c/u = ${money(l.price * l.qty)}`;
   });
   return [
-    `Hola Gramercy, quiero confirmar este pedido.`,
+    `Hola, quiero confirmar este pedido.`,
     `Pedido: ${o.id}`,
     ``,
     ...lines,

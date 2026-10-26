@@ -117,7 +117,7 @@ async function fillCheckout(page, data = {}) {
   const id1 = await page.textContent(".order-id b");
   await page.goto(base + "#/pedido"); await page.click("#review"); await page.waitForSelector(".order-id");
   const id2 = await page.textContent(".order-id b");
-  const nOrders = await page.evaluate(() => JSON.parse(localStorage.getItem("gramercy-orders")).length);
+  const nOrders = await page.evaluate(() => JSON.parse(localStorage.getItem("tienda-orders")).length);
   check("9. Clic repetido o reenvío con los mismos datos no duplica el pedido", id1 === id2 && nOrders === 1, `${id1} / ${id2} / pedidos=${nOrders}`);
 
   // Mensaje de WhatsApp completo.
@@ -133,7 +133,7 @@ async function fillCheckout(page, data = {}) {
   await page.click("#mark-sent");
   const st2 = await page.textContent(".status");
   const cartAfter = await page.isHidden(".badge");
-  const paid = await page.evaluate(() => JSON.parse(localStorage.getItem("gramercy-orders")).some((o) => o.status === "paid"));
+  const paid = await page.evaluate(() => JSON.parse(localStorage.getItem("tienda-orders")).some((o) => o.status === "paid"));
   check("8. El pedido nunca pasa a «pagado» solo; el carrito se vacía al confirmar el envío",
     /Por enviar/.test(st) && cartBefore === "6" && /esperando confirmación/.test(st2) && cartAfter && !paid, `${st} → ${st2}`);
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/orden-desk.png` });
@@ -146,7 +146,7 @@ async function fillCheckout(page, data = {}) {
   await page.click('[data-unit="0"][data-opt="S"]');
   await page.click('[data-unit="1"][data-opt="M"]');
   await page.click("#add");
-  const cartOf = () => page.evaluate(() => JSON.parse(localStorage.getItem("gramercy-cart")).items.map((l) => `${l.option}${l.qty}`).join(" "));
+  const cartOf = () => page.evaluate(() => JSON.parse(localStorage.getItem("tienda-cart")).items.map((l) => `${l.option}${l.qty}`).join(" "));
   const c1 = await cartOf();
   await page.goto(base + "#/carrito");
   await page.click('.line[data-product="polo"] [data-unit="1"][data-opt="L"]');
@@ -190,7 +190,7 @@ async function fillCheckout(page, data = {}) {
   await page.goto(base + "#/producto/polo/S");
   const disabled = await page.isDisabled("#add");
   const soldTxt = await page.textContent("#sold-msg");
-  await page.evaluate(() => localStorage.setItem("gramercy-cart", JSON.stringify({ items: [{ product: "polo", option: "S", qty: 1 }] })));
+  await page.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "polo", option: "S", qty: 1 }] })));
   await page.goto(base + "#/carrito"); await page.reload();
   const blocked = await page.getAttribute("#next", "aria-disabled");
   await page.click("#next", { force: true });
@@ -200,7 +200,7 @@ async function fillCheckout(page, data = {}) {
   page = await newPage();
   await withConfig(page, (b) => b.replace("zones: [],", 'zones: [{ id: "este", label: "Caracas — Este", fee: 3 }],'));
   await page.goto(base);
-  await page.evaluate(() => localStorage.setItem("gramercy-cart", JSON.stringify({ items: [{ product: "lentes", option: "azul", qty: 2 }] })));
+  await page.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "lentes", option: "azul", qty: 2 }] })));
   await page.reload(); await page.goto(base + "#/pedido");
   await fillCheckout(page);
   await page.click("label.pc-efectivo");
@@ -217,7 +217,7 @@ async function fillCheckout(page, data = {}) {
   for (const w of widths) {
     const p = await newPage({ viewport: { width: w, height: 900 } });
     await p.goto(base);
-    await p.evaluate(() => localStorage.setItem("gramercy-cart", JSON.stringify({ items: [{ product: "polo", option: "XXL", qty: 3 }, { product: "lentes", option: "ambar", qty: 1 }] })));
+    await p.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "polo", option: "XXL", qty: 3 }, { product: "lentes", option: "ambar", qty: 1 }] })));
     await p.reload();
     for (const h of ["#/", "#/producto/lentes/azul", "#/producto/polo/L", "#/carrito", "#/pedido"]) {
       await p.goto(base + h); await p.waitForTimeout(150);
@@ -232,7 +232,7 @@ async function fillCheckout(page, data = {}) {
   // 12. Teclado y movimiento reducido.
   page = await newPage({ reducedMotion: "reduce" });
   await page.goto(base);
-  await page.evaluate(() => localStorage.setItem("gramercy-cart", JSON.stringify({ items: [{ product: "lentes", option: "azul", qty: 1 }] })));
+  await page.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "lentes", option: "azul", qty: 1 }] })));
   await page.reload(); await page.goto(base + "#/pedido");
   await page.focus('input[value="pagoMovil"]');
   await page.keyboard.press("ArrowRight");

@@ -84,14 +84,13 @@ main:focus { outline: none; }
   padding: var(--s4) var(--gutter);
   position: relative; z-index: 5;
 }
-.logo { font-weight: 800; font-size: clamp(22px, 2.2vw, 32px); letter-spacing: -0.02em; color: var(--white); text-decoration: none; }
-.nav { display: flex; gap: clamp(18px, 3.5vw, 64px); }
+.nav { grid-column: 2; display: flex; gap: clamp(18px, 3.5vw, 64px); }
 .nav a {
   color: var(--white); text-decoration: none; font-weight: 300; font-size: clamp(16px, 1.6vw, 24px);
   padding: 8px 2px; border-bottom: 2px solid transparent; transition: border-color var(--t-fast) var(--ease-out);
 }
 .nav a[aria-current="page"] { border-color: var(--white); }
-.tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.tools { grid-column: 3; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
 .icon-btn {
   position: relative; display: grid; place-items: center; width: 46px; height: 46px;
   border: 0; border-radius: 50%; background: transparent; color: var(--white);
@@ -386,7 +385,6 @@ dialog#zoom-dialog img { width: 100%; max-height: calc(100vh - 120px); object-fi
   padding: 28px var(--gutter); background: var(--ink); color: var(--white);
 }
 .foot p { margin: 0; font-weight: 400; }
-.foot .foot-logo { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; }
 .toast {
   position: fixed; left: 50%; top: 96px; z-index: 30; transform: translate(-50%, -12px); max-width: calc(100vw - 32px); opacity: 0; pointer-events: none;
   display: flex; align-items: center; gap: var(--s3); padding: 12px 14px 12px 22px; border-radius: var(--r-pill);
@@ -406,8 +404,9 @@ dialog#zoom-dialog img { width: 100%; max-height: calc(100vh - 120px); object-fi
   .panel { border-radius: 48px 48px 0 0; border-right: 1px solid var(--glass-edge); }
 }
 @media (max-width: 640px) {
-  .top { grid-template-columns: 1fr auto; row-gap: 6px; }
-  .nav { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
+  .top { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+  .nav { grid-column: 1; grid-row: 1; gap: 18px; }
+  .tools { grid-column: 2; grid-row: 1; gap: 0; }
   .search.open input { width: 130px; }
   .features { grid-template-columns: 1fr; }
   .s-item { grid-template-columns: 80px 1fr; gap: 14px; }
@@ -421,6 +420,8 @@ dialog#zoom-dialog img { width: 100%; max-height: calc(100vh - 120px); object-fi
   .tag { padding: 10px 22px; }
 }
 @media (max-width: 360px) {
+  .tools { grid-column: 2; grid-row: 1; }
+  .nav { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
   .nav a { font-size: 15px; }
   .chip { min-width: 54px; padding: 0 12px; }
   .totals { padding: 4px 16px; }
