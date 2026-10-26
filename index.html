@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gramercy</title>
+<meta name="description" content="Gramercy — lentes blue light y Quarter Zip Polo Ralph Lauren con delivery gratis en Caracas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="logo" href="#/">Gramercy.</a>
+  <nav class="nav" aria-label="Principal">
+    <a href="#/" data-nav="inicio">Inicio</a>
+    <a href="#/productos" data-nav="productos">Productos</a>
+    <a href="#/contacto" data-nav="contacto">Contacto</a>
+  </nav>
+  <div class="tools">
+    <form class="search" role="search">
+      <input type="search" placeholder="Buscar…" aria-label="Buscar productos">
+      <button type="button" class="icon-btn search-toggle" aria-label="Buscar">
+        <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+      </button>
+    </form>
+    <a class="icon-btn cart-link" href="#/carrito" aria-label="Carrito">
+      <svg viewBox="0 0 24 24"><path d="M5 7h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+      <span class="badge" hidden>0</span>
+    </a>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot" id="contacto">
+  <div>
+    <p class="foot-logo">Gramercy.</p>
+    <p>Delivery gratis en Caracas.</p>
+  </div>
+  <div class="pay" aria-label="Métodos de pago">
+    <span class="pay-chip pm">Pago Móvil</span>
+    <span class="pay-chip bn">Binance</span>
+    <span class="pay-chip ef">Efectivo</span>
+  </div>
+</footer>
+
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
