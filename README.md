@@ -1,5 +1,6 @@
-# gramercy
-Gramercy Lets go 
+# chokopro
+
+Tienda online Gramercy: lentes blue light y Quarter Zip Polo Ralph Lauren, con pedidos por WhatsApp.
 
 ## Skills de diseño (`.claude/skills/`)
 
