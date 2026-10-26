@@ -85,26 +85,24 @@ const CATALOG = {
       ["chat", "Ficha técnica", "por WhatsApp"],
     ],
   },
-  polo: {
-    id: "polo",
-    brand: "Polo Ralph Lauren",
-    name: "Quarter Zip Polo Ralph Lauren",
-    short: "Quarter Zip Polo",
-    price: 120,
-    optionLabel: "Talla",
-    optionPrefix: "Talla",
-    unitLabel: "Suéter",
-    options: ["S", "M", "L", "XL", "XXL"].map((s) => ({
-      id: s, label: s, img: "assets/polo-quarter-zip.webp", w: 666, h: 737, available: true,
-    })),
-    defaultOption: "L",
+  gafas: {
+    id: "gafas",
+    brand: "Gafas de sol",
+    name: "Gafas de Sol",
+    price: 30,
+    optionLabel: "Color",
+    optionPrefix: "Cristal",
+    unitLabel: "Par",
+    options: [
+      { id: "negro", label: "Negro", swatch: "#2b2b30", img: "assets/gafas-negro.webp", w: 762, h: 310, available: true },
+    ],
     description:
-      "Suéter de punto trenzado con media cremallera, cuello alto y el pony bordado en rojo sobre el pecho. Pide la composición y las medidas de cada talla por WhatsApp antes de comprar.",
+      "La misma montura redonda negra de nuestros lentes, con cristales oscuros para el sol. Si necesitas la ficha técnica del cristal, pídela por WhatsApp antes de comprar.",
     features: [
-      ["zip", "Media", "cremallera"],
-      ["knit", "Punto", "trenzado"],
-      ["pony", "Pony", "bordado"],
-      ["ruler", "Tallas", "S a XXL"],
+      ["frame", "Montura", "redonda negra"],
+      ["lens", "Cristal", "negro"],
+      ["sun", "Para días", "de sol"],
+      ["chat", "Ficha técnica", "por WhatsApp"],
     ],
   },
 };
