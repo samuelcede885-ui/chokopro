@@ -1,0 +1,38 @@
+name: Tasa euro BCV
+
+on:
+  schedule:
+    # 9:17 y 17:17 hora de Caracas (UTC-4). El BCV suele publicar la tasa del día siguiente en la tarde.
+    - cron: "17 13 * * *"
+    - cron: "17 21 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/tasa-bcv.yml"
+      - "scripts/update-rate.mjs"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tasa-bcv
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Consultar la tasa
+        run: node scripts/update-rate.mjs
+      - name: Guardar rate.json si cambió
+        run: |
+          if git diff --quiet rate.json; then exit 0; fi
+          git config user.name "gramercy-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rate.json
+          git commit -m "Actualizar tasa euro BCV"
+          git push
