@@ -31,7 +31,7 @@ jobs:
       - name: Guardar rate.json si cambió
         run: |
           if git diff --quiet rate.json; then exit 0; fi
-          git config user.name "gramercy-bot"
+          git config user.name "tienda-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add rate.json
           git commit -m "Actualizar tasa euro BCV"

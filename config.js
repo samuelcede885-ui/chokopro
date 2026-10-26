@@ -1,10 +1,10 @@
-// Configuración de la tienda Gramercy.
+// Configuración de la tienda.
 // Todo lo que el propietario debe confirmar vive aquí. Un valor en null significa
 // "todavía no lo tenemos": la tienda lo muestra como "se confirma por WhatsApp"
 // en lugar de inventar un dato.
 
 const STORE = {
-  name: "Gramercy",
+  name: "Tienda",
   city: "Caracas, Venezuela",
   currency: "USD",
 
