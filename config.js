@@ -62,6 +62,7 @@ const CATALOG = {
     price: 20,
     optionLabel: "Color",
     optionPrefix: "Cristal",
+    unitLabel: "Par",
     options: [
       { id: "ambar", label: "Ámbar", swatch: "#f6a21a", img: "assets/lentes-ambar.webp", w: 695, h: 352, available: true },
       { id: "azul", label: "Azul", swatch: "#5a8fd6", img: "assets/lentes-azul.webp", w: 742, h: 317, available: true },
@@ -83,6 +84,7 @@ const CATALOG = {
     price: 120,
     optionLabel: "Talla",
     optionPrefix: "Talla",
+    unitLabel: "Suéter",
     options: ["S", "M", "L", "XL", "XXL"].map((s) => ({
       id: s, label: s, img: "assets/polo-quarter-zip.webp", w: 666, h: 737, available: true,
     })),

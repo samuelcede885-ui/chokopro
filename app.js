@@ -223,18 +223,19 @@ function howSection() {
 }
 
 // ---------- Ficha de producto ----------
+// Cada unidad tiene su propia talla o color: dos suéteres pueden ser S y M.
 function renderProduct(id, optId) {
   const p = CATALOG[id];
   if (!p) return go("#/");
-  let opt = (findOption(p, optId) || optionOf(p, defaultOpt(p))).id;
-  let qty = 1;
+  let units = [(findOption(p, optId) || optionOf(p, defaultOpt(p))).id];
+  let shown = units[0];
   setMeta(p.name, `${p.name} — ${money(p.price)}. ${p.description}`);
-  track("view_item", { item: p.id, variant: opt });
+  track("view_item", { item: p.id, variant: shown });
   app.innerHTML = `
     <section class="detail">
       <div class="stage">
         <button type="button" class="zoom-btn" id="zoom" aria-label="Ampliar foto">
-          ${pic(optionOf(p, opt), `${p.name}, ${variantText(p, optionOf(p, opt))}`, 'class="swap" id="pimg"')}
+          ${pic(optionOf(p, shown), `${p.name}, ${variantText(p, optionOf(p, shown))}`, 'class="swap" id="pimg"')}
           <span class="zoom-hint">${svg("zoom")}Ampliar</span>
         </button>
       </div>
@@ -243,11 +244,6 @@ function renderProduct(id, optId) {
         <h1 class="name">${p.name}</h1>
         <p class="price-big">${money(p.price)}</p>
         <p class="pay-note">Pagas con Pago Móvil, Binance o efectivo, después de que confirmemos tu pedido.</p>
-        <p class="opt-label" id="opt-label">${p.optionLabel}</p>
-        <div class="chips" role="group" aria-labelledby="opt-label">
-          ${p.options.map((o) => chip(o, o.id === opt)).join("")}
-        </div>
-        <p class="sold-msg" id="sold-msg" role="status"></p>
         <div class="buy-row">
           <p class="opt-label" id="qty-label">Cantidad</p>
           <div class="stepper" role="group" aria-labelledby="qty-label">
@@ -256,6 +252,8 @@ function renderProduct(id, optId) {
             <button type="button" data-q="1" aria-label="Agregar uno">+</button>
           </div>
         </div>
+        <div id="units"></div>
+        <p class="sold-msg" id="sold-msg" role="status"></p>
         <div class="desc"><h2>Descripción</h2><p>${p.description}</p></div>
         <div class="actions">
           <button type="button" class="btn btn-ink" id="add">Agregar al carrito ${arrow}</button>
@@ -267,42 +265,74 @@ function renderProduct(id, optId) {
   const img = app.querySelector("#pimg");
   const add = app.querySelector("#add");
   const sold = app.querySelector("#sold-msg");
-  const syncAvailability = () => {
-    const o = optionOf(p, opt);
-    add.disabled = !o.available;
-    sold.textContent = o.available ? "" : `${variantText(p, o)} está agotado. Elige otra opción.`;
+  const out = app.querySelector("output");
+  const box = app.querySelector("#units");
+
+  const showPhoto = (optionId) => {
+    const o = optionOf(p, optionId);
+    shown = o.id;
+    if (!img.src.endsWith(o.img)) { img.src = o.img; img.width = o.w; img.height = o.h; img.classList.remove("swap"); void img.offsetWidth; img.classList.add("swap"); }
+    img.alt = `${p.name}, ${variantText(p, o)}`;
+    history.replaceState(null, "", `#/producto/${p.id}/${o.id}`);
   };
-  app.querySelectorAll("[data-opt]").forEach((b) =>
+  const drawUnits = () => {
+    out.textContent = units.length;
+    box.innerHTML = unitPickers(p, units, "u");
+    const bad = units.map((u) => optionOf(p, u)).filter((o) => !o.available);
+    add.disabled = bad.length > 0;
+    sold.textContent = bad.length ? `${variantText(p, bad[0])} está agotado. Elige otra opción.` : "";
+  };
+  box.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-opt]");
+    if (!b || b.hasAttribute("data-soldout")) return;
+    const k = +b.dataset.unit;
+    units[k] = b.dataset.opt;
+    drawUnits();
+    showPhoto(units[k]);
+    box.querySelector(`[data-unit="${k}"][data-opt="${units[k]}"]`)?.focus();
+  });
+  app.querySelectorAll("[data-q]").forEach((b) =>
     b.addEventListener("click", () => {
-      opt = b.dataset.opt;
-      app.querySelectorAll("[data-opt]").forEach((x) => x.setAttribute("aria-pressed", x === b));
-      const o = optionOf(p, opt);
-      if (!img.src.endsWith(o.img)) { img.src = o.img; img.width = o.w; img.height = o.h; img.classList.remove("swap"); void img.offsetWidth; img.classList.add("swap"); }
-      img.alt = `${p.name}, ${variantText(p, o)}`;
-      history.replaceState(null, "", `#/producto/${p.id}/${opt}`);
-      syncAvailability();
+      if (+b.dataset.q > 0 && units.length < STORE.maxQtyPerLine) units.push(units[units.length - 1]);
+      if (+b.dataset.q < 0 && units.length > 1) units.pop();
+      drawUnits();
     })
   );
-  syncAvailability();
-  const out = app.querySelector("output");
-  app.querySelectorAll("[data-q]").forEach((b) =>
-    b.addEventListener("click", () => { qty = Math.min(STORE.maxQtyPerLine, Math.max(1, qty + +b.dataset.q)); out.textContent = qty; })
-  );
+  drawUnits();
+
   add.addEventListener("click", () => {
-    const o = optionOf(p, opt);
-    if (!o.available) return;
-    const added = addToCart(p.id, opt, qty);
-    track("add_to_cart", { item: p.id, variant: opt, qty: added });
-    if (!added) return toast(`Ya tienes el máximo de ${STORE.maxQtyPerLine} unidades de este artículo.`);
-    toast(`${added} × ${p.short || p.name} (${o.label}) en tu carrito`, { label: "Ver carrito", run: () => go("#/carrito") });
+    if (units.some((u) => !optionOf(p, u).available)) return;
+    const counts = {};
+    units.forEach((u) => { counts[u] = (counts[u] || 0) + 1; });
+    let added = 0;
+    for (const [opt, n] of Object.entries(counts)) added += addToCart(p.id, opt, n);
+    track("add_to_cart", { item: p.id, variants: Object.keys(counts).join(","), qty: added });
+    if (!added) return toast(`Ya tienes el máximo de ${STORE.maxQtyPerLine} unidades por opción.`);
+    const labels = Object.keys(counts).map((o) => optionOf(p, o).label).join(", ");
+    toast(`${added} × ${p.short || p.name} (${labels}) en tu carrito`, { label: "Ver carrito", run: () => go("#/carrito") });
   });
-  app.querySelector("#zoom").addEventListener("click", () => openZoom(optionOf(p, opt), p));
+  app.querySelector("#zoom").addEventListener("click", () => openZoom(optionOf(p, shown), p));
 }
 
-function chip(o, pressed, line) {
+// Un selector por unidad. Con una sola unidad se ve como un selector normal.
+function unitPickers(p, units, scope) {
+  if (units.length === 1) {
+    return `<p class="opt-label" id="${scope}-0-label">${p.optionLabel}</p>
+      <div class="chips" role="group" aria-labelledby="${scope}-0-label">${p.options.map((o) => chip(o, o.id === units[0], 0)).join("")}</div>`;
+  }
+  return `<p class="opt-label">${p.optionLabel} de cada ${p.unitLabel.toLowerCase()}</p>
+    <div class="units">${units.map((u, k) => `
+      <div class="unit">
+        <span class="unit-label" id="${scope}-${k}-label">${p.unitLabel} ${k + 1}</span>
+        <div class="chips" role="group" aria-labelledby="${scope}-${k}-label">${p.options.map((o) => chip(o, o.id === u, k)).join("")}</div>
+      </div>`).join("")}
+    </div>`;
+}
+
+function chip(o, pressed, unit) {
   const sw = o.swatch ? `<span class="sw" style="background:${o.swatch}"></span>` : "";
   const mark = `<span class="chip-check">${svg("check")}</span>`;
-  return `<button type="button" class="chip" data-opt="${o.id}" ${line !== undefined ? `data-line="${line}"` : ""} aria-pressed="${pressed}" ${o.available ? "" : 'aria-disabled="true" data-soldout'}>${mark}${sw}${o.label}${o.available ? "" : '<span class="sr"> (agotado)</span>'}</button>`;
+  return `<button type="button" class="chip" data-opt="${o.id}" data-unit="${unit}" aria-pressed="${pressed}" ${o.available ? "" : 'aria-disabled="true" data-soldout'}>${mark}${sw}${o.label}${o.available ? "" : '<span class="sr"> (agotado)</span>'}</button>`;
 }
 
 function openZoom(o, p) {
@@ -312,6 +342,29 @@ function openZoom(o, p) {
 }
 
 // ---------- Carrito ----------
+// El carrito guarda líneas por opción ({product, option, qty}) y se muestra agrupado
+// por producto, con un selector por unidad.
+const productIds = () => [...new Set(cart.map((l) => l.product))];
+const unitsOf = (pid) => cart.filter((l) => l.product === pid).flatMap((l) => Array(l.qty).fill(l.option));
+
+function moveUnit(pid, from, to) {
+  if (from === to) return;
+  const src = cart.find((l) => l.product === pid && l.option === from);
+  const dst = cart.find((l) => l.product === pid && l.option === to);
+  if (!src) return;
+  if (dst) {
+    if (dst.qty >= STORE.maxQtyPerLine) return toast(`Máximo ${STORE.maxQtyPerLine} unidades por opción.`);
+    dst.qty++;
+    src.qty--;
+    if (!src.qty) cart.splice(cart.indexOf(src), 1);
+  } else if (src.qty === 1) {
+    src.option = to;
+  } else {
+    src.qty--;
+    cart.splice(cart.indexOf(src) + 1, 0, { product: pid, option: to, qty: 1 });
+  }
+}
+
 function renderCart() {
   setMeta("Carrito");
   if (!cart.length) {
@@ -325,21 +378,19 @@ function renderCart() {
     <section class="cart">
       <div>
         <h1 class="tag">CARRITO</h1>
-        ${cart.map((l, i) => {
-          const p = CATALOG[l.product];
-          const o = findOption(p, l.option);
-          return `<div class="line">
+        ${productIds().map((pid) => {
+          const p = CATALOG[pid];
+          const units = unitsOf(pid);
+          const soldOut = [...new Set(units)].map((u) => findOption(p, u)).filter((o) => !o.available);
+          return `<div class="line" data-product="${pid}">
             <div class="line-head">
-              <button type="button" class="qbtn" data-line="${i}" data-q="-1" aria-label="Quitar uno de ${esc(p.name)}">−</button>
-              <span>${l.qty} ${p.short || p.name}</span>
-              <button type="button" class="qbtn" data-line="${i}" data-q="1" aria-label="Agregar uno de ${esc(p.name)}" ${l.qty >= STORE.maxQtyPerLine ? "disabled" : ""}>+</button>
-              <button type="button" class="rm" data-rm="${i}">Quitar</button>
+              <button type="button" class="qbtn" data-product="${pid}" data-q="-1" aria-label="Quitar un ${esc(p.unitLabel.toLowerCase())}">−</button>
+              <span>${units.length} ${p.short || p.name}</span>
+              <button type="button" class="qbtn" data-product="${pid}" data-q="1" aria-label="Agregar un ${esc(p.unitLabel.toLowerCase())}">+</button>
+              <button type="button" class="rm" data-rm="${pid}">Quitar</button>
             </div>
-            <p class="h3" id="line-${i}-label">${p.optionLabel}</p>
-            <div class="chips" role="group" aria-labelledby="line-${i}-label">
-              ${p.options.map((x) => chip(x, x.id === l.option, i)).join("")}
-            </div>
-            ${o.available ? "" : `<p class="sold-msg">${variantText(p, o)} se agotó. Cambia la opción o quita el artículo.</p>`}
+            ${unitPickers(p, units, `c-${pid}`)}
+            ${soldOut.map((o) => `<p class="sold-msg">${variantText(p, o)} se agotó. Cámbialo o quita esa unidad.</p>`).join("")}
           </div>`;
         }).join("")}
         <a class="link-btn" href="#/productos">Seguir comprando</a>
@@ -351,36 +402,45 @@ function renderCart() {
 
   app.querySelectorAll(".qbtn").forEach((b) =>
     b.addEventListener("click", () => {
-      const i = +b.dataset.line, l = cart[i];
-      const next = l.qty + +b.dataset.q;
-      if (next < 1) return removeLine(i);
-      l.qty = Math.min(STORE.maxQtyPerLine, next);
-      saveCart(); renderCart();
-      app.querySelector(`.qbtn[data-line="${i}"][data-q="${b.dataset.q}"]`)?.focus();
+      const pid = b.dataset.product;
+      const units = unitsOf(pid);
+      const last = units[units.length - 1];
+      if (+b.dataset.q > 0) {
+        if (!addToCart(pid, last, 1)) return toast(`Máximo ${STORE.maxQtyPerLine} unidades por opción.`);
+      } else {
+        if (units.length === 1) return removeProduct(pid);
+        const l = cart.find((x) => x.product === pid && x.option === last);
+        l.qty--;
+        if (!l.qty) cart.splice(cart.indexOf(l), 1);
+        saveCart();
+      }
+      renderCart();
+      app.querySelector(`.qbtn[data-product="${pid}"][data-q="${b.dataset.q}"]`)?.focus();
     })
   );
-  app.querySelectorAll("[data-rm]").forEach((b) => b.addEventListener("click", () => removeLine(+b.dataset.rm)));
-  app.querySelectorAll(".chip[data-line]").forEach((b) =>
+  app.querySelectorAll("[data-rm]").forEach((b) => b.addEventListener("click", () => removeProduct(b.dataset.rm)));
+  app.querySelectorAll(".line .chip").forEach((b) =>
     b.addEventListener("click", () => {
       if (b.hasAttribute("data-soldout")) return;
-      const i = +b.dataset.line, l = cart[i];
-      const twin = cart.findIndex((x, j) => j !== i && x.product === l.product && x.option === b.dataset.opt);
-      if (twin >= 0) { cart[twin].qty = Math.min(STORE.maxQtyPerLine, cart[twin].qty + l.qty); cart.splice(i, 1); }
-      else l.option = b.dataset.opt;
+      const pid = b.closest(".line").dataset.product;
+      const k = +b.dataset.unit;
+      moveUnit(pid, unitsOf(pid)[k], b.dataset.opt);
       saveCart(); renderCart();
+      app.querySelector(`.line[data-product="${pid}"] [data-unit="${k}"][data-opt="${b.dataset.opt}"]`)?.focus();
     })
   );
   const next = app.querySelector("#next");
   next.addEventListener("click", (e) => { if (blocked) e.preventDefault(); else track("begin_checkout", { items: cart.length }); });
 }
 
-function removeLine(i) {
-  const [removed] = cart.splice(i, 1);
+function removeProduct(pid) {
+  const before = cart.map((l) => ({ ...l }));
+  cart = cart.filter((l) => l.product !== pid);
   saveCart(); renderCart();
-  const p = CATALOG[removed.product];
+  const p = CATALOG[pid];
   toast(`Quitaste ${p.short || p.name}`, {
     label: "Deshacer",
-    run: () => { cart.splice(Math.min(i, cart.length), 0, removed); saveCart(); if (location.hash === "#/carrito") renderCart(); },
+    run: () => { cart = before; saveCart(); if (location.hash === "#/carrito") renderCart(); },
   });
 }
 

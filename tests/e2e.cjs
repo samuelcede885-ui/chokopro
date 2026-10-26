@@ -61,15 +61,16 @@ async function fillCheckout(page, data = {}) {
   await page.click('[data-opt="XL"]'); await page.click("#add");
   await page.goto(base + "#/carrito");
   let lines = await page.locator(".line").count();
+  const unitRows = await page.locator(".unit").count();
   const badge1 = await page.textContent(".badge");
-  await page.click('.qbtn[data-line="0"][data-q="1"]');
-  const qty0 = await page.textContent(".line:nth-of-type(1) .line-head span");
-  await page.click('[data-rm="1"]');
+  await page.click('.qbtn[data-product="lentes"][data-q="1"]');
+  const qty0 = await page.textContent('.line[data-product="lentes"] .line-head span');
+  await page.click('[data-rm="polo"]');
   const afterRemove = await page.locator(".line").count();
   await page.click(".toast button");
   const afterUndo = await page.locator(".line").count();
-  check("2. Ambos colores y dos tallas en el carrito; cantidades, quitar y deshacer", lines === 4 && badge1 === "5" && /^2 /.test(qty0) && afterRemove === 3 && afterUndo === 4,
-    `líneas=${lines} badge=${badge1} qty0="${qty0}" quitar=${afterRemove} deshacer=${afterUndo}`);
+  check("2. Ambos colores y dos tallas en el carrito; cantidades, quitar y deshacer", lines === 2 && unitRows === 5 && badge1 === "5" && /^4 /.test(qty0) && afterRemove === 1 && afterUndo === 2,
+    `productos=${lines} unidades=${unitRows} badge=${badge1} qty0="${qty0}" quitar=${afterRemove} deshacer=${afterUndo}`);
 
   // Totales: 2 ámbar + 2 azul (20) + M + XL (120) = 320.
   const subtotal = await page.textContent(".totals div:first-child span:last-child");
@@ -78,7 +79,7 @@ async function fillCheckout(page, data = {}) {
 
   // 3. Recargar conserva el carrito.
   await page.reload(); await page.waitForTimeout(200);
-  check("3. Recargar conserva el carrito", (await page.locator(".line").count()) === 4 && (await page.textContent(".badge")) === "6");
+  check("3. Recargar conserva el carrito", (await page.locator(".unit").count()) === 6 && (await page.textContent(".badge")) === "6");
 
   // 5. Sin datos obligatorios no se crea pedido.
   await page.click("#next");
@@ -134,6 +135,25 @@ async function fillCheckout(page, data = {}) {
   check("8. El pedido nunca pasa a «pagado» solo; el carrito se vacía al confirmar el envío",
     /Por enviar/.test(st) && cartBefore === "6" && /esperando confirmación/.test(st2) && cartAfter && !paid, `${st} → ${st2}`);
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/orden-desk.png` });
+
+  // 2b. Dos suéteres con tallas distintas, y cambio de talla por unidad en el carrito.
+  page = await newPage();
+  await page.goto(base + "#/producto/polo/L");
+  await page.click('[data-q="1"]');
+  const rows2 = await page.locator(".unit").count();
+  await page.click('[data-unit="0"][data-opt="S"]');
+  await page.click('[data-unit="1"][data-opt="M"]');
+  await page.click("#add");
+  const cartOf = () => page.evaluate(() => JSON.parse(localStorage.getItem("gramercy-cart")).items.map((l) => `${l.option}${l.qty}`).join(" "));
+  const c1 = await cartOf();
+  await page.goto(base + "#/carrito");
+  await page.click('.line[data-product="polo"] [data-unit="1"][data-opt="L"]');
+  const c2 = await cartOf();
+  await page.click('.line[data-product="polo"] [data-unit="0"][data-opt="L"]');
+  const c3 = await cartOf();
+  const sum2 = await page.textContent(".totals div:first-child span:last-child");
+  check("2b. Cada suéter con su talla: S + M en la ficha; en el carrito se cambia una unidad sin tocar la otra",
+    rows2 === 2 && c1 === "S1 M1" && c2 === "S1 L1" && c3 === "L2" && sum2 === "$240.00", `filas=${rows2} | ${c1} → ${c2} → ${c3} | ${sum2}`);
 
   // 4. Variante agotada no se puede comprar; un carrito con ella no avanza.
   page = await newPage();

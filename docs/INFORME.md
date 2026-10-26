@@ -37,6 +37,7 @@ No había backend, pasarela de pago, inventario ni panel administrativo.
 - **Escape de HTML** en todo lo que escribe el usuario (`esc()` en `app.js`).
 - **Agotados:** una variante con `available: false` no se puede agregar, aparece tachada y bloquea el checkout si ya estaba en el carrito.
 - **Textos de producto:** se quitaron las afirmaciones de salud y de material. Ahora se describe lo que se ve en la foto y se invita a pedir la ficha técnica, la composición y las medidas por WhatsApp. El titular «Protege Tu Vista» pasó a ser «Tu Vista, Tu Estilo».
+- **Talla o color por unidad:** al pedir más de uno, cada suéter tiene su propia talla (por ejemplo S y M) y cada par de lentes su color, tanto en la ficha como en el carrito. Cambiar una unidad no afecta a las demás.
 - **Quitar con «Deshacer»** en el aviso, y un máximo configurable de 10 unidades por artículo.
 
 ## Bloque D — Métodos de pago
@@ -62,7 +63,7 @@ No se integró ninguna API de cobro: no hay credenciales ni autorización.
 
 ## Bloque F — Pruebas ejecutadas
 
-`node tests/e2e.cjs` levanta un servidor propio y recorre la tienda con Chromium. Resultado de la última ejecución: **17/17 comprobaciones pasan**.
+`node tests/e2e.cjs` levanta un servidor propio y recorre la tienda con Chromium. Resultado de la última ejecución: **18/18 comprobaciones pasan** (incluye dos suéteres S + M y el cambio de talla de una sola unidad en el carrito).
 
 | Criterio del plan | Resultado |
 |---|---|
