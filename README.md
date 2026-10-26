@@ -14,4 +14,4 @@ Cada carpeta conserva el `LICENSE` de su proyecto original.
 ## Tienda (`index.html`)
 
 Página de una sola pantalla con tres vistas: portada (`#/`), ficha de producto (`#/producto/<id>`) y carrito (`#/carrito`).
-Ábrela con cualquier servidor estático, por ejemplo `python3 -m http.server`. Los productos, precios y stock están en `PRODUCTS`, dentro de `app.js`; si pones el número de la tienda en `WHATSAPP`, el botón "Pagar" envía el pedido por WhatsApp.
+Ábrela con cualquier servidor estático, por ejemplo `python3 -m http.server`. Los productos y precios están en `PRODUCTS`, dentro de `app.js`; si pones el número de la tienda en `WHATSAPP`, el botón "Pagar" envía el pedido por WhatsApp.

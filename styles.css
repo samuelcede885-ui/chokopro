@@ -8,7 +8,6 @@
   --glass: rgba(255, 255, 255, 0.55);
   --glass-strong: rgba(255, 255, 255, 0.82);
   --line: rgba(20, 16, 107, 0.12);
-  --ok: #19b36b;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --radius: 22px;
   --display: "Plus Jakarta Sans", system-ui, sans-serif;
@@ -161,11 +160,6 @@ a { color: inherit; }
 .brand { font-weight: 300; font-size: clamp(16px, 1.4vw, 22px); margin: 0; color: var(--ink-soft); }
 .name { margin: 4px 0 6px; font-weight: 800; letter-spacing: -0.045em; line-height: 0.95; font-size: clamp(40px, 4.6vw, 80px); }
 .price-big { font: 500 clamp(40px, 4vw, 64px) / 1.1 var(--cond); margin: 6px 0 14px; }
-.pill {
-  display: inline-flex; align-items: center; gap: 12px; padding: 10px 22px; border-radius: 999px;
-  background: var(--ink); color: var(--white); font: 500 clamp(18px, 1.6vw, 26px) var(--cond); letter-spacing: 0.01em;
-}
-.pill svg { width: 46px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .pay { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 24px; }
 .pay-chip { padding: 6px 12px; border-radius: 8px; font: 600 12px var(--display); color: #fff; }
 .pay-chip.pm { background: #6a2ee8; }
@@ -182,7 +176,7 @@ a { color: inherit; }
 .chip:active { transform: scale(0.95); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--white); }
 .chip .sw { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 8px; vertical-align: -2px; border: 2px solid rgba(0, 0, 0, 0.2); }
-.buy-row { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; margin-bottom: 26px; }
+.buy-row { display: grid; gap: 0; justify-items: start; margin-bottom: 26px; }
 .stepper {
   justify-self: start;
   display: inline-flex; align-items: center; border-radius: 999px; background: var(--white); color: var(--ink);
@@ -190,10 +184,6 @@ a { color: inherit; }
 }
 .stepper button { width: 48px; height: 52px; border: 0; background: none; font: 500 28px var(--cond); }
 .stepper output { min-width: 34px; text-align: center; font: 600 28px var(--cond); }
-.stock { font: 500 18px var(--cond); }
-.stock .row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.bar { height: 14px; border-radius: 7px; background: var(--glass-strong); overflow: hidden; }
-.bar i { display: block; height: 100%; border-radius: 7px; background: var(--ok); transition: width 400ms var(--ease-out); }
 .desc h3 { margin: 0 0 8px; font-weight: 800; letter-spacing: -0.02em; font-size: 22px; }
 .desc p { margin: 0 0 28px; font-weight: 400; line-height: 1.6; max-width: 62ch; color: var(--ink-soft); }
 
@@ -261,7 +251,6 @@ a { color: inherit; }
   .nav { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
   .search.open input { width: 130px; }
   .features { grid-template-columns: 1fr; }
-  .buy-row { grid-template-columns: 1fr; }
   .s-item { grid-template-columns: 88px 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {

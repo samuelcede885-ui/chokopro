@@ -19,9 +19,7 @@ const PRODUCTS = {
     id: "lentes",
     brand: "Blue Light",
     name: "Lentes Blue Light",
-    price: 35,
-    stock: 30,
-    stockMax: 40,
+    price: 20,
     optionLabel: "Color",
     options: [
       { id: "ambar", label: "Ámbar", swatch: "#f6a21a", img: "assets/lentes-ambar.png" },
@@ -42,8 +40,6 @@ const PRODUCTS = {
     name: "Quarter Zip Polo Ralph Lauren",
     short: "Quarter Zip Polo",
     price: 120,
-    stock: 18,
-    stockMax: 30,
     optionLabel: "Tallas",
     options: ["S", "M", "L", "XL", "XXL"].map((s) => ({ id: s, label: s, img: "assets/polo-quarter-zip.png" })),
     defaultOption: "L",
@@ -175,9 +171,6 @@ function renderProduct(id, optId) {
         <p class="brand">${p.brand}</p>
         <h1 class="name">${p.name}</h1>
         <p class="price-big">${money(p.price)}</p>
-        <span class="pill">Delivery gratis
-          <svg viewBox="0 0 46 26" aria-hidden="true"><path d="M14 4h17v15H14zM31 9h7l5 5v5h-12M2 8h8M4 13h7M6 18h5"/><circle cx="19" cy="21" r="2.6"/><circle cx="37" cy="21" r="2.6"/></svg>
-        </span>
         <div class="pay" aria-label="Métodos de pago">
           <span class="pay-chip pm">Pago Móvil</span><span class="pay-chip bn">Binance</span><span class="pay-chip ef">Efectivo</span>
         </div>
@@ -186,14 +179,11 @@ function renderProduct(id, optId) {
           ${p.options.map((o) => `<button type="button" class="chip" data-opt="${o.id}" aria-pressed="${o.id === opt}">${o.swatch ? `<span class="sw" style="background:${o.swatch}"></span>` : ""}${o.label}</button>`).join("")}
         </div>
         <div class="buy-row">
+          <p class="opt-label">Cantidad</p>
           <div class="stepper">
             <button type="button" data-q="-1" aria-label="Quitar uno">−</button>
             <output aria-live="polite">1</output>
             <button type="button" data-q="1" aria-label="Agregar uno">+</button>
-          </div>
-          <div class="stock">
-            <div class="row"><span>Stock</span><span>${p.stock} ${p.id === "lentes" ? "pares" : "unidades"}</span></div>
-            <div class="bar"><i style="width:${Math.round((p.stock / p.stockMax) * 100)}%"></i></div>
           </div>
         </div>
         <div class="desc"><h3>Descripción</h3><p>${p.description}</p></div>
@@ -212,7 +202,7 @@ function renderProduct(id, optId) {
   );
   const out = app.querySelector("output");
   app.querySelectorAll("[data-q]").forEach((b) =>
-    b.addEventListener("click", () => { qty = Math.min(p.stock, Math.max(1, qty + +b.dataset.q)); out.textContent = qty; })
+    b.addEventListener("click", () => { qty = Math.min(99, Math.max(1, qty + +b.dataset.q)); out.textContent = qty; })
   );
   app.querySelector("#add").addEventListener("click", () => {
     addToCart(p.id, opt, qty);
@@ -260,7 +250,6 @@ function renderCart() {
         }).join("")}
         <div class="totals">
           <div><span>Producto</span><span>${money(subtotal)}</span></div>
-          <div><span>Delivery</span><span>$0.00</span></div>
           <div class="grand"><span>Total</span><span>${money(subtotal)}</span></div>
         </div>
         <button type="button" class="btn btn-ink" id="pay">Pagar ${money(subtotal)} ${arrow}</button>
@@ -292,12 +281,12 @@ function renderCart() {
 }
 
 function checkout(total, loc) {
-  if (!location_.trim()) { loc.focus(); return toast("Escribe tu ubicación para el delivery"); }
+  if (!location_.trim()) { loc.focus(); return toast("Escribe tu ubicación para la entrega"); }
   const lines = cart.map((l) => {
     const p = PRODUCTS[l.product];
     return `• ${l.qty} × ${p.name} — ${p.id === "polo" ? "Talla" : "Cristal"} ${optionOf(p, l.option).label} (${money(p.price * l.qty)})`;
   });
-  const msg = `Hola Gramercy, quiero hacer este pedido:\n${lines.join("\n")}\nDelivery: $0.00\nTotal: ${money(total)}\nUbicación: ${location_.trim()}`;
+  const msg = `Hola Gramercy, quiero hacer este pedido:\n${lines.join("\n")}\nTotal: ${money(total)}\nUbicación: ${location_.trim()}`;
   if (WHATSAPP) {
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
   } else if (navigator.clipboard) {
