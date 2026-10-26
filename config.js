@@ -14,12 +14,12 @@ const STORE = {
 
   // Montos en bolívares: precio en dólares × tasa oficial del euro del BCV.
   // rate.json lo actualiza cada día .github/workflows/tasa-bcv.yml.
-  // Si la tasa tiene más de maxAgeDays días, la tienda deja de mostrar bolívares.
+  // Si la tasa tiene más de maxAgeDays días (cubre fines de semana largos), la tienda deja de mostrar bolívares.
   bolivares: {
     enabled: true,
     rateFile: "rate.json",
     liveUrl: "https://ve.dolarapi.com/v1/euros/oficial",
-    maxAgeDays: 4,
+    maxAgeDays: 5,
   },
 
   // Máximo de unidades por artículo en un pedido.
