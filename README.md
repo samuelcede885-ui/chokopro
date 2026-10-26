@@ -18,6 +18,7 @@ Tienda de una página: portada (`#/`), producto (`#/producto/<id>`), carrito (`#
 
 - **`config.js`**: WhatsApp, envío, métodos de pago, políticas, catálogo, precios y disponibilidad. Es el único archivo que hay que tocar para datos del negocio.
 - **Tasa euro BCV**: `rate.json`, actualizado por `.github/workflows/tasa-bcv.yml` (manual: `node scripts/update-rate.mjs`).
+- **Publicación**: `.github/workflows/pages.yml` publica la tienda en GitHub Pages con cada cambio en `main` y después de cada actualización de la tasa.
 - **Ver la tienda**: `python3 -m http.server` en la carpeta del repo y abre `localhost:8000`.
 - **Pruebas**: `node tests/e2e.cjs` (necesita Playwright con Chromium).
 - **Estado, pruebas y pendientes**: [`docs/INFORME.md`](docs/INFORME.md).
