@@ -12,6 +12,16 @@ const STORE = {
   // +58 0412-3307641 se escribe "584123307641".
   whatsapp: "584123307641",
 
+  // Montos en bolívares: precio en dólares × tasa oficial del euro del BCV.
+  // rate.json lo actualiza cada día .github/workflows/tasa-bcv.yml.
+  // Si la tasa tiene más de maxAgeDays días, la tienda deja de mostrar bolívares.
+  bolivares: {
+    enabled: true,
+    rateFile: "rate.json",
+    liveUrl: "https://ve.dolarapi.com/v1/euros/oficial",
+    maxAgeDays: 4,
+  },
+
   // Máximo de unidades por artículo en un pedido.
   maxQtyPerLine: 10,
 

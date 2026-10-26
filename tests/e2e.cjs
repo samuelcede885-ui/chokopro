@@ -41,8 +41,10 @@ async function fillCheckout(page, data = {}) {
   const newPage = async (opts = {}) => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
     const page = await ctx.newPage();
+    // La API en vivo no se usa en las pruebas: la tasa sale de rate.json.
+    await page.route("**/ve.dolarapi.com/**", (r) => r.abort());
     page.on("pageerror", (e) => errors.push(e.message));
-    page.on("console", (m) => m.type() === "error" && !/fonts\.(googleapis|gstatic)/.test(m.text()) && errors.push(m.text()));
+    page.on("console", (m) => m.type() === "error" && !/fonts\.(googleapis|gstatic)|Failed to load resource/.test(m.text()) && errors.push(m.text()));
     return page;
   };
 
@@ -154,6 +156,31 @@ async function fillCheckout(page, data = {}) {
   const sum2 = await page.textContent(".totals div:first-child span:last-child");
   check("2b. Cada suéter con su talla: S + M en la ficha; en el carrito se cambia una unidad sin tocar la otra",
     rows2 === 2 && c1 === "S1 M1" && c2 === "S1 L1" && c3 === "L2" && sum2 === "$240.00", `filas=${rows2} | ${c1} → ${c2} → ${c3} | ${sum2}`);
+
+  // Bolívares: precio en dólares × tasa euro BCV de rate.json; una tasa vieja no se muestra.
+  const today = new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10);
+  const ddmm = today.split("-").reverse().join("/");
+  page = await newPage();
+  await page.route("**/rate.json", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ currency: "EUR", source: "BCV", rate: 500, date: today }) }));
+  await page.goto(base + "#/producto/polo/L");
+  await page.waitForSelector(".bs-big:not([hidden])");
+  const bsPolo = await page.textContent(".bs-big");
+  await page.click('[data-q="1"]'); await page.click("#add");
+  await page.goto(base + "#/carrito");
+  const bsCart = await page.textContent(".bs-row span:last-child");
+  await page.click("#next");
+  await fillCheckout(page); await page.click("label.pc-pagoMovil"); await page.click("#review");
+  await page.waitForSelector(".order-id");
+  const bsMsg = decodeURIComponent((await page.getAttribute("#send", "href")).split("text=")[1]);
+  check("Bs. Monto en bolívares a tasa euro en ficha, carrito y mensaje de WhatsApp",
+    bsPolo === "Bs. 60.000,00" && bsCart === "Bs. 120.000,00" && bsMsg.includes(`Total en bolívares: Bs. 120.000,00 + envío (tasa euro BCV 500,00 del ${ddmm})`),
+    `${bsPolo} | ${bsCart} | ${bsMsg.split("\n").find((l) => l.includes("bolívares"))}`);
+
+  page = await newPage();
+  const old = new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10);
+  await page.route("**/rate.json", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ rate: 500, date: old }) }));
+  await page.goto(base + "#/producto/polo/L"); await page.waitForTimeout(400);
+  check("Bs. Una tasa de hace 10 días no se muestra", await page.isHidden(".bs-big"));
 
   // 4. Variante agotada no se puede comprar; un carrito con ella no avanza.
   page = await newPage();

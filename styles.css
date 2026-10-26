@@ -55,6 +55,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+[hidden] { display: none !important; }
 img { display: block; max-width: 100%; height: auto; }
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; }
@@ -227,6 +228,11 @@ main:focus { outline: none; }
 .brand { font-weight: 400; font-size: clamp(16px, 1.4vw, 22px); margin: 0; color: var(--ink-soft); }
 .name { margin: 4px 0 6px; font-weight: 800; letter-spacing: -0.045em; line-height: 0.95; font-size: clamp(38px, 4.6vw, 80px); }
 .price-big { font: 500 clamp(40px, 4vw, 64px) / 1.1 var(--cond); margin: 6px 0 var(--s2); font-variant-numeric: tabular-nums; }
+.bs { display: block; font: 500 17px var(--cond); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.bs-big { margin: -4px 0 var(--s1); font-size: clamp(20px, 1.8vw, 26px); color: var(--ink); }
+.bs-note { margin: 0 0 var(--s2); font-size: 13px; }
+.totals .bs-row { font-weight: 600; color: var(--ink); }
+.totals .bs-row span:last-child { font-family: var(--cond); font-weight: 500; }
 .pay-note { margin: 0 0 var(--s4); color: var(--ink-soft); line-height: 1.5; max-width: 52ch; }
 .pay { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .pay-chip { padding: 6px 12px; border-radius: 8px; font: 600 12px var(--display); color: var(--white); }

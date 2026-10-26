@@ -65,9 +65,77 @@ window.dataLayer = window.dataLayer || [];
 const track = (event, data = {}) => window.dataLayer.push({ event, ...data });
 
 // ---------- Estado guardado en este navegador ----------
-const KEYS = { cart: "gramercy-cart", form: "gramercy-checkout", orders: "gramercy-orders" };
+const KEYS = { cart: "gramercy-cart", form: "gramercy-checkout", orders: "gramercy-orders", rate: "gramercy-rate" };
 const load = (k, fallback) => { try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch (e) { return fallback; } };
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+// ---------- Bolívares a tasa euro BCV ----------
+// Monto en Bs = precio en dólares × tasa oficial del euro (STORE.bolivares en config.js).
+const BS = STORE.bolivares || {};
+const bsFmt = new Intl.NumberFormat("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const bsMoney = (usd, r) => "Bs. " + bsFmt.format(Math.round(usd * r.rate * 100) / 100);
+const dateFmt = (d) => d.split("-").reverse().join("/");
+let rate = null;
+
+// Una tasa sirve si es un número positivo con fecha y no tiene más de maxAgeDays días.
+function freshRate(r) {
+  if (!r || !(Number(r.rate) > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || "")) return null;
+  const age = (Date.now() - Date.parse(r.date + "T12:00:00-04:00")) / 864e5;
+  return age <= (BS.maxAgeDays ?? 4) ? { rate: Number(r.rate), date: r.date } : null;
+}
+
+// Lugar para un monto en Bs; paintBs() lo llena. rateOverride fija la tasa (pedidos ya creados).
+function bsTag(usd, cls = "bs", rateOverride) {
+  const fixed = rateOverride ? `data-rate="${rateOverride.rate}" data-date="${rateOverride.date}"` : "";
+  return `<span class="${cls}" data-bs="${usd}" ${fixed} hidden></span>`;
+}
+function bsNote(rateOverride) {
+  const fixed = rateOverride ? `data-rate="${rateOverride.rate}" data-date="${rateOverride.date}"` : "";
+  return `<p class="note bs-note" data-bs-note ${fixed} hidden></p>`;
+}
+
+function paintBs() {
+  const pick = (el) => (el.dataset.rate ? { rate: Number(el.dataset.rate), date: el.dataset.date } : rate);
+  document.querySelectorAll("[data-bs]").forEach((el) => {
+    const r = pick(el);
+    const text = r ? bsMoney(Number(el.dataset.bs), r) : "";
+    if (el.textContent !== text) el.textContent = text;
+    if (el.hidden !== !r) el.hidden = !r;
+    const row = el.closest("[data-bs-row]");
+    if (row && row.hidden !== !r) row.hidden = !r;
+  });
+  document.querySelectorAll("[data-bs-note]").forEach((el) => {
+    const r = pick(el);
+    const text = r ? `Tasa euro BCV del ${dateFmt(r.date)}: Bs. ${bsFmt.format(r.rate)} por cada $1. El monto final en bolívares se calcula con la tasa del día en que pagues.` : "";
+    if (el.textContent !== text) el.textContent = text;
+    if (el.hidden !== !r) el.hidden = !r;
+  });
+}
+
+async function loadRate() {
+  if (!BS.enabled) return;
+  const cached = freshRate(load(KEYS.rate, null));
+  if (cached) { rate = cached; paintBs(); }
+  const found = [];
+  try {
+    const res = await fetch(BS.rateFile, { cache: "no-cache" });
+    if (res.ok) found.push(await res.json());
+  } catch (e) {}
+  // Consulta directa: funciona donde la página puede llamar a la API (no dentro de un artifact de Claude).
+  if (BS.liveUrl) {
+    try {
+      const res = await fetch(BS.liveUrl);
+      if (res.ok) {
+        const j = await res.json();
+        found.push({ rate: Number(j.promedio ?? j.venta ?? j.compra), date: (j.fechaActualizacion || "").slice(0, 10) });
+      }
+    } catch (e) {}
+  }
+  const best = found.map(freshRate).filter(Boolean).sort((a, b) => b.date.localeCompare(a.date))[0];
+  if (best) { rate = best; store(KEYS.rate, best); }
+  else if (!cached) rate = null;
+  paintBs();
+}
 
 let cart = sanitizeCart(load(KEYS.cart, {}).items);
 let form = Object.assign({ name: "", phone: "", city: "", address: "", ref: "", zone: "", payment: "", payRef: "" }, load(KEYS.form, {}));
@@ -183,6 +251,7 @@ function productsSection(filter = "") {
             <div class="pic">${pic(o, `${p.name}, ${variantText(p, o)}`, 'loading="lazy" decoding="async"')}</div>
             <div class="row"><h3>${p.short || p.name}</h3><span class="price">${money(p.price)}</span></div>
             <span class="meta">${p.id === "lentes" ? "Cristal " + o.label : "Tallas S a XXL"}${soldOut ? " · Agotado" : ""}</span>
+            ${bsTag(p.price, "bs meta")}
           </a>`;
         }).join("") : `<p class="empty">No encontramos productos para “${esc(filter)}”. <a href="#/productos">Ver todos</a></p>`}
       </div>
@@ -243,6 +312,8 @@ function renderProduct(id, optId) {
         <p class="brand">${p.brand}</p>
         <h1 class="name">${p.name}</h1>
         <p class="price-big">${money(p.price)}</p>
+        ${bsTag(p.price, "bs bs-big")}
+        ${bsNote()}
         <p class="pay-note">Pagas con Pago Móvil, Binance o efectivo, después de que confirmemos tu pedido.</p>
         <div class="buy-row">
           <p class="opt-label" id="qty-label">Cantidad</p>
@@ -444,7 +515,9 @@ function removeProduct(pid) {
   });
 }
 
-function summaryCard(t, footer, items = cart) {
+// bsRate: undefined = tasa actual; null = sin bolívares; objeto = tasa guardada en el pedido.
+function summaryCard(t, footer, items = cart, bsRate) {
+  const showBs = bsRate !== null;
   return `
     <aside class="summary" aria-label="Resumen del pedido">
       ${items.map((l) => {
@@ -456,7 +529,9 @@ function summaryCard(t, footer, items = cart) {
         <div><span>Subtotal</span><span>${money(t.subtotal)}</span></div>
         <div><span>Envío</span><span>${t.shippingKnown ? money(t.shipping) : "Por confirmar"}</span></div>
         <div class="grand"><span>${t.shippingKnown ? "Total" : "Total sin envío"}</span><span>${money(t.total)}</span></div>
+        ${showBs ? `<div class="bs-row" data-bs-row hidden><span>${t.shippingKnown ? "Total en bolívares" : "En bolívares, sin envío"}</span>${bsTag(t.total, "", bsRate)}</div>` : ""}
       </div>
+      ${showBs ? bsNote(bsRate) : ""}
       ${t.shippingKnown ? "" : '<p class="note">El costo de envío te lo confirmamos por WhatsApp antes de que pagues.</p>'}
       ${footer}
     </aside>`;
@@ -620,6 +695,7 @@ function createOrder() {
     zone: t.zone ? { label: t.zone.label, fee: t.zone.fee } : null,
     payment: form.payment,
     payRef: form.payRef.trim(),
+    bs: rate ? { ...rate } : null,
     subtotal: t.subtotal,
     shipping: t.shipping,
     total: t.total,
@@ -645,6 +721,7 @@ function orderMessage(o) {
     `Subtotal: ${money(o.subtotal)}`,
     `Envío: ${o.shipping === null ? "por confirmar" : `${money(o.shipping)} (${o.zone.label})`}`,
     `Total: ${money(o.total)}${o.shipping === null ? " + envío" : ""}`,
+    o.bs ? `Total en bolívares: ${bsMoney(o.total, o.bs)}${o.shipping === null ? " + envío" : ""} (tasa euro BCV ${bsFmt.format(o.bs.rate)} del ${dateFmt(o.bs.date)})` : null,
     `Método de pago: ${method}${o.payRef ? ` (referencia ${o.payRef})` : ""}`,
     ``,
     `Nombre: ${o.customer.name}`,
@@ -693,7 +770,7 @@ function renderOrder(id) {
           <dt>Método de pago</dt><dd>${method ? method.label : esc(o.payment)}${o.payRef ? ` · ref. ${esc(o.payRef)}` : ""}</dd>
           <dt>Estado del pago</dt><dd>${o.status === "paid" ? "Pagado" : "Pendiente de confirmación"}</dd>
           <dt>Entrega</dt><dd>${esc(o.customer.name)} · ${esc(o.customer.phone)}<br>${esc(o.customer.address)}, ${esc(o.customer.city)}${o.customer.ref ? `<br>Ref.: ${esc(o.customer.ref)}` : ""}</dd>
-        </dl>`, o.items)}
+        </dl>`, o.items, o.bs || null)}
     </section>`;
   if (sent) return;
   const markSent = () => {
@@ -773,6 +850,10 @@ document.getElementById("zoom-dialog").addEventListener("click", (e) => {
 
 document.getElementById("foot-wa").innerHTML = WA ? ` · WhatsApp <span class="wa-num">${waDisplay}</span>` : "";
 
+// Cada vista nueva recibe los montos en bolívares sin volver a dibujarse.
+new MutationObserver(paintBs).observe(app, { childList: true, subtree: true });
+
 addEventListener("hashchange", route);
 saveCart();
 route();
+loadRate();

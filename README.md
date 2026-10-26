@@ -16,6 +16,7 @@ Cada carpeta conserva el `LICENSE` de su proyecto original.
 Tienda de una página: portada (`#/`), producto (`#/producto/<id>`), carrito (`#/carrito`), datos del pedido (`#/pedido`) y confirmación (`#/orden/<referencia>`). Los pedidos se envían por WhatsApp; no hay cobro en línea.
 
 - **`config.js`**: WhatsApp, envío, métodos de pago, políticas, catálogo, precios y disponibilidad. Es el único archivo que hay que tocar para datos del negocio.
+- **Tasa euro BCV**: `rate.json`, actualizado por `.github/workflows/tasa-bcv.yml` (manual: `node scripts/update-rate.mjs`).
 - **Ver la tienda**: `python3 -m http.server` en la carpeta del repo y abre `localhost:8000`.
 - **Pruebas**: `node tests/e2e.cjs` (necesita Playwright con Chromium).
 - **Estado, pruebas y pendientes**: [`docs/INFORME.md`](docs/INFORME.md).
