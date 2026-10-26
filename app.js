@@ -650,7 +650,7 @@ function renderPayInfo() {
   if (m === "pagoMovil") {
     html = cfg.details
       ? `<p>Haz el Pago Móvil a estos datos <b>después</b> de que confirmemos tu pedido y el costo de envío:</p>
-         <dl class="kv">${Object.entries({ Banco: cfg.details.bank, Teléfono: cfg.details.phone, Cédula: cfg.details.id }).filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+         ${pmDetails(cfg.details, totals())}
          <div class="f"><label for="f-payRef">Referencia del pago (si ya pagaste)</label>
          <input id="f-payRef" name="payRef" type="text" inputmode="numeric" maxlength="20" value="${esc(form.payRef)}"></div>
          <p class="note">Tu pago queda <b>pendiente de verificación</b> hasta que lo confirmemos con el banco.</p>`
@@ -668,6 +668,17 @@ function renderPayInfo() {
       : `<p>Las condiciones del pago en efectivo (entrega o retiro, monto exacto) te las confirmamos por WhatsApp.</p>`;
   }
   box.innerHTML = `<div class="pay-box swap">${html}</div>`;
+  bindCopy(box);
+}
+
+// Datos de Pago Móvil con botón de copiar y el monto en bolívares (sin envío si aún no se conoce).
+function pmDetails(d, t, r) {
+  const rows = [["Banco", d.bank, (d.bank.match(/^\d{4}/) || [d.bank])[0]], ["Teléfono", d.phone, d.phone.replace(/\D/g, "")], ["Cédula", d.id, d.id.replace(/\D/g, "")]]
+    .filter(([, v]) => v);
+  return `<dl class="kv pm">
+    ${rows.map(([k, v, c]) => `<dt>${k}</dt><dd><span>${esc(v)}</span><button type="button" class="copy-chip" data-copy="${esc(c)}" data-copy-label="${k} copiado" aria-label="Copiar ${k.toLowerCase()}">Copiar</button></dd>`).join("")}
+    <dt>Monto</dt><dd>${money(t.total)}${bsTag(t.total, "bs-inline", r)}${t.shippingKnown ? "" : "<span>+ envío</span>"}</dd>
+  </dl>`;
 }
 
 // ---------- Pedido ----------
@@ -763,6 +774,11 @@ function renderOrder(id) {
             <button type="button" class="link-btn" id="mark-sent">Sí, ya lo envié</button>
             <a class="link-btn" href="#/pedido">Editar datos</a>
           </div>`}
+        ${o.payment === "pagoMovil" && STORE.payments.pagoMovil.details ? `
+          <div class="pay-box pm-order">
+            <p><b>Datos para tu Pago Móvil.</b> Paga cuando te confirmemos el envío y mándanos la referencia por WhatsApp.</p>
+            ${pmDetails(STORE.payments.pagoMovil.details, { total: o.total, shippingKnown: o.shipping !== null }, o.bs || null)}
+          </div>` : ""}
         <details class="msg-preview"><summary>Ver el mensaje</summary><pre>${esc(msg)}</pre></details>
       </div>
       ${summaryCard({ subtotal: o.subtotal, shipping: o.shipping, total: o.total, shippingKnown: o.shipping !== null }, `
@@ -772,6 +788,7 @@ function renderOrder(id) {
           <dt>Entrega</dt><dd>${esc(o.customer.name)} · ${esc(o.customer.phone)}<br>${esc(o.customer.address)}, ${esc(o.customer.city)}${o.customer.ref ? `<br>Ref.: ${esc(o.customer.ref)}` : ""}</dd>
         </dl>`, o.items, o.bs || null)}
     </section>`;
+  bindCopy();
   if (sent) return;
   const markSent = () => {
     if (o.status !== "draft") return;
@@ -794,8 +811,8 @@ function copyText(text, btn, done) {
   else toast("No pudimos copiar: abre «Ver el mensaje» y cópialo a mano.");
 }
 
-function bindCopy() {
-  app.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => copyText(b.dataset.copy, b, "Número copiado")));
+function bindCopy(root = app) {
+  root.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => copyText(b.dataset.copy, b, b.dataset.copyLabel || "Número copiado")));
 }
 
 // ---------- Rutas ----------

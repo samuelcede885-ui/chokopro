@@ -347,6 +347,13 @@ fieldset { margin: 0 0 var(--s4); padding: 0; border: 0; min-width: 0; }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px var(--s3); margin: 0; }
 .kv dt { font-weight: 600; color: var(--ink-soft); }
 .kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.kv.pm { align-items: center; margin: var(--s2) 0; }
+.kv.pm dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-variant-numeric: tabular-nums; }
+.copy-chip { min-height: 32px; padding: 0 12px; border: 1px solid var(--ink); border-radius: var(--r-pill); background: var(--white); color: var(--ink); font: 600 13px var(--display); }
+.copy-chip:active { transform: scale(0.96); }
+.bs-inline { font-family: var(--cond); font-weight: 500; }
+.bs-inline::before { content: "= "; }
+.pm-order { margin-top: var(--s4); }
 
 .order-id { font-size: 20px; margin: var(--s2) 0; }
 .order-id b { font: 600 26px var(--cond); letter-spacing: 0.02em; user-select: all; }

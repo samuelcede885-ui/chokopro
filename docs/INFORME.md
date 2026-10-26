@@ -103,7 +103,8 @@ Opciones de bajo costo: Supabase (base de datos, autenticación y almacenamiento
 - [ ] Confirmar precios: lentes $20 y suéter $120, en USD; impuestos
 - [ ] Stock real por talla y color (hoy todas las variantes están disponibles)
 - [ ] Zonas, tarifas y tiempos de entrega; ¿hay retiro?
-- [ ] Datos de Pago Móvil (banco, teléfono, cédula) y cómo verifican los pagos
+- [x] Datos de Pago Móvil: Banco Activo (0171), 0412-3307641, C.I. 33.972.869
+- [ ] Cómo verifican los pagos de Pago Móvil
 - [ ] Binance: ¿Binance Pay o transferencia? Pay ID o dirección autorizada
 - [ ] Condiciones del pago en efectivo
 - [ ] Políticas de cambios, privacidad y tiempos de entrega

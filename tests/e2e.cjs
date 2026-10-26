@@ -107,7 +107,7 @@ async function fillCheckout(page, data = {}) {
     info[m] = await page.textContent("#pay-info");
   }
   check("7. Cada método de pago se puede elegir y muestra sus instrucciones",
-    /No pagues antes/.test(info.pagoMovil) && /Binance/.test(info.binance) && /efectivo/i.test(info.efectivo), JSON.stringify(info).slice(0, 160));
+    /0171 Banco Activo/.test(info.pagoMovil) && /0412-3307641/.test(info.pagoMovil) && /33\.972\.869/.test(info.pagoMovil) && /pendiente de verificación/.test(info.pagoMovil) && /Binance/.test(info.binance) && /efectivo/i.test(info.efectivo), JSON.stringify(info).slice(0, 160));
 
   // 9. Doble clic no duplica pedidos.
   await fillCheckout(page);
@@ -172,8 +172,10 @@ async function fillCheckout(page, data = {}) {
   await fillCheckout(page); await page.click("label.pc-pagoMovil"); await page.click("#review");
   await page.waitForSelector(".order-id");
   const bsMsg = decodeURIComponent((await page.getAttribute("#send", "href")).split("text=")[1]);
+  const pmOrder = await page.textContent(".pm-order");
   check("Bs. Monto en bolívares a tasa euro en ficha, carrito y mensaje de WhatsApp",
-    bsPolo === "Bs. 60.000,00" && bsCart === "Bs. 120.000,00" && bsMsg.includes(`Total en bolívares: Bs. 120.000,00 + envío (tasa euro BCV 500,00 del ${ddmm})`),
+    bsPolo === "Bs. 60.000,00" && bsCart === "Bs. 120.000,00" && bsMsg.includes(`Total en bolívares: Bs. 120.000,00 + envío (tasa euro BCV 500,00 del ${ddmm})`) &&
+    /0412-3307641/.test(pmOrder) && /Bs\. 120\.000,00/.test(pmOrder),
     `${bsPolo} | ${bsCart} | ${bsMsg.split("\n").find((l) => l.includes("bolívares"))}`);
 
   page = await newPage();

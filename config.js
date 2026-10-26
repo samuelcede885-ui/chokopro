@@ -38,8 +38,7 @@ const STORE = {
   payments: {
     pagoMovil: {
       enabled: true,
-      // p. ej. { bank: "0102 Banco de Venezuela", phone: "0412-0000000", id: "V-00000000" }
-      details: null,
+      details: { bank: "0171 Banco Activo", phone: "0412-3307641", id: "33.972.869" },
     },
     binance: {
       enabled: true,
