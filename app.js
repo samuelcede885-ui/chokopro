@@ -5,11 +5,8 @@ const ICONS = {
   frame: '<circle cx="6.5" cy="13" r="4"/><circle cx="17.5" cy="13" r="4"/><path d="M10.5 13h3M2.5 12 1 9M21.5 12 23 9"/>',
   lens: '<circle cx="12" cy="12" r="8"/><path d="M8 9.5a4.5 4.5 0 0 1 4-2.5"/>',
   monitor: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
-  zip: '<path d="M12 3v18"/><path d="M10 6h4M10 9h4M10 12h4"/><rect x="10" y="14" width="4" height="5" rx="1"/>',
-  knit: '<path d="M6 4c4 3 4 5 0 8s-4 5 0 8M18 4c-4 3-4 5 0 8s4 5 0 8M12 4v16"/>',
-  pony: '<path d="M4 20 17.5 6.5"/><ellipse cx="19" cy="5" rx="1.6" ry="2.4" transform="rotate(45 19 5)"/><path d="M19.5 7.5c1.5 4-3 6-6 8s-5 3-4 5"/>',
-  ruler: '<rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/>',
   check: '<path d="m5 12 4.5 4.5L19 7"/>',
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/><path d="M10 7.5h4M10 10.5h4"/>',
   wallet: '<path d="M7 7.5 15.5 4l1.3 3.5"/><rect x="7.5" y="5.5" width="10" height="5" rx=".8" transform="rotate(-12 12.5 8)"/><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M21 12h-4a2 2 0 0 0 0 4h4"/>',
@@ -21,7 +18,7 @@ const ICONS = {
 
 const SLIDES = [
   { product: "lentes", option: "ambar", head: ["Tu Vista,", "Tu Estilo"], wide: true },
-  { product: "polo", option: "L", head: ["Eleva", "Tu Estilo"] },
+  { product: "gafas", option: "negro", head: ["Sol con", "Estilo"], wide: true },
   { product: "lentes", option: "azul", head: ["Tu Vista,", "Tu Estilo"], wide: true },
 ];
 
@@ -202,7 +199,7 @@ function renderHome() {
   const s = SLIDES[slideIndex];
   const p = CATALOG[s.product];
   const o = optionOf(p, s.option);
-  setMeta("", "Lentes blue light y Quarter Zip Polo Ralph Lauren en Caracas. Pedidos por WhatsApp.");
+  setMeta("", "Lentes blue light y gafas de sol en Caracas. Pedidos por WhatsApp.");
   app.innerHTML = `
     <section class="hero">
       <div class="swap">
@@ -238,19 +235,19 @@ function renderHome() {
 function productsSection(filter = "") {
   const q = filter.trim().toLowerCase();
   const cards = Object.values(CATALOG)
-    .flatMap((p) => (p.id === "lentes" ? p.options.map((o) => [p, o]) : [[p, optionOf(p, defaultOpt(p))]]))
+    .flatMap((p) => p.options.map((o) => [p, o]))
     .filter(([p, o]) => !q || `${p.name} ${p.brand} ${o.label}`.toLowerCase().includes(q));
   return `
     <section class="section" id="productos" aria-labelledby="productos-h">
       <h2 id="productos-h">Nuestros <span>productos</span></h2>
       <div class="grid">
         ${cards.length ? cards.map(([p, o]) => {
-          const soldOut = p.id === "lentes" ? !o.available : !p.options.some((x) => x.available);
+          const soldOut = !o.available;
           return `
           <a class="card" href="#/producto/${p.id}/${o.id}">
             <div class="pic">${pic(o, `${p.name}, ${variantText(p, o)}`, 'loading="lazy" decoding="async"')}</div>
             <div class="row"><h3>${p.short || p.name}</h3><span class="price">${money(p.price)}</span></div>
-            <span class="meta">${p.id === "lentes" ? "Cristal " + o.label : "Tallas S a XXL"}${soldOut ? " · Agotado" : ""}</span>
+            <span class="meta">${variantText(p, o)}${soldOut ? " · Agotado" : ""}</span>
             ${bsTag(p.price, "bs meta")}
           </a>`;
         }).join("") : `<p class="empty">No encontramos productos para “${esc(filter)}”. <a href="#/productos">Ver todos</a></p>`}
@@ -277,7 +274,7 @@ function howSection() {
     <section class="section how" id="como-comprar" aria-labelledby="how-h">
       <h2 id="how-h">Cómo <span>comprar</span></h2>
       <ol class="steps">
-        <li><b>Arma tu pedido</b><span>Elige color o talla y la cantidad.</span></li>
+        <li><b>Arma tu pedido</b><span>Elige el producto, el color y la cantidad.</span></li>
         <li><b>Envíalo por WhatsApp</b><span>Te damos una referencia de pedido y el mensaje listo para enviar.</span></li>
         <li><b>Confirmamos</b><span>Disponibilidad, costo de envío y datos de pago, antes de que pagues.</span></li>
         <li><b>Pagas y despachamos</b><span>Verificamos tu pago a mano y luego coordinamos la entrega.</span></li>
@@ -292,7 +289,7 @@ function howSection() {
 }
 
 // ---------- Ficha de producto ----------
-// Cada unidad tiene su propia talla o color: dos suéteres pueden ser S y M.
+// Cada unidad tiene su propio color: dos pares pueden ser ámbar y azul.
 function renderProduct(id, optId) {
   const p = CATALOG[id];
   if (!p) return go("#/");
@@ -387,6 +384,7 @@ function renderProduct(id, optId) {
 
 // Un selector por unidad. Con una sola unidad se ve como un selector normal.
 function unitPickers(p, units, scope) {
+  if (p.options.length === 1) return "";
   if (units.length === 1) {
     return `<p class="opt-label" id="${scope}-0-label">${p.optionLabel}</p>
       <div class="chips" role="group" aria-labelledby="${scope}-0-label">${p.options.map((o) => chip(o, o.id === units[0], 0)).join("")}</div>`;

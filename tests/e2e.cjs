@@ -50,38 +50,38 @@ async function fillCheckout(page, data = {}) {
 
   // 1. Todas las vistas cargan sin errores.
   let page = await newPage();
-  for (const h of ["#/", "#/productos", "#/producto/lentes/ambar", "#/producto/polo/M", "#/carrito", "#/contacto"]) {
+  for (const h of ["#/", "#/productos", "#/producto/lentes/ambar", "#/producto/gafas/negro", "#/carrito", "#/contacto"]) {
     await page.goto(base + h); await page.waitForTimeout(250);
   }
   check("1. Portada, catálogo, producto y carrito cargan sin errores de consola", errors.length === 0, errors.join(" | "));
 
-  // 2. Añadir ambos colores y varias tallas, cambiar cantidades, quitar y deshacer.
+  // 2. Añadir ambos colores de lentes y gafas de sol, cambiar cantidades, quitar y deshacer.
   await page.goto(base + "#/producto/lentes/ambar");
   await page.click("#add");
   await page.click('[data-opt="azul"]'); await page.click('[data-q="1"]'); await page.click("#add");
-  await page.goto(base + "#/producto/polo/M"); await page.click("#add");
-  await page.click('[data-opt="XL"]'); await page.click("#add");
+  await page.goto(base + "#/producto/gafas/negro");
+  await page.click('[data-q="1"]'); await page.click("#add");
   await page.goto(base + "#/carrito");
   let lines = await page.locator(".line").count();
   const unitRows = await page.locator(".unit").count();
   const badge1 = await page.textContent(".badge");
   await page.click('.qbtn[data-product="lentes"][data-q="1"]');
   const qty0 = await page.textContent('.line[data-product="lentes"] .line-head span');
-  await page.click('[data-rm="polo"]');
+  await page.click('[data-rm="gafas"]');
   const afterRemove = await page.locator(".line").count();
   await page.click(".toast button");
   const afterUndo = await page.locator(".line").count();
-  check("2. Ambos colores y dos tallas en el carrito; cantidades, quitar y deshacer", lines === 2 && unitRows === 5 && badge1 === "5" && /^4 /.test(qty0) && afterRemove === 1 && afterUndo === 2,
+  check("2. Ambos colores y gafas de sol en el carrito; cantidades, quitar y deshacer", lines === 2 && unitRows === 3 && badge1 === "5" && /^4 /.test(qty0) && afterRemove === 1 && afterUndo === 2,
     `productos=${lines} unidades=${unitRows} badge=${badge1} qty0="${qty0}" quitar=${afterRemove} deshacer=${afterUndo}`);
 
-  // Totales: 2 ámbar + 2 azul (20) + M + XL (120) = 320.
+  // Totales: 1 ámbar + 3 azul (20) + 2 gafas (30) = 140.
   const subtotal = await page.textContent(".totals div:first-child span:last-child");
   const ship = await page.textContent(".totals div:nth-child(2) span:last-child");
-  check("6a. Subtotal correcto y envío «Por confirmar» sin tarifa configurada", subtotal === "$320.00" && ship === "Por confirmar", `${subtotal} / ${ship}`);
+  check("6a. Subtotal correcto y envío «Por confirmar» sin tarifa configurada", subtotal === "$140.00" && ship === "Por confirmar", `${subtotal} / ${ship}`);
 
   // 3. Recargar conserva el carrito.
   await page.reload(); await page.waitForTimeout(200);
-  check("3. Recargar conserva el carrito", (await page.locator(".unit").count()) === 6 && (await page.textContent(".badge")) === "6");
+  check("3. Recargar conserva el carrito", (await page.locator(".unit").count()) === 4 && (await page.textContent(".badge")) === "6");
 
   // 5. Sin datos obligatorios no se crea pedido.
   await page.click("#next");
@@ -124,8 +124,8 @@ async function fillCheckout(page, data = {}) {
   const href = await page.getAttribute("#send", "href");
   const msg = decodeURIComponent(href.split("text=")[1]);
   check("3.2 Mensaje de WhatsApp con número, pedido, variantes, totales, método y dirección",
-    href.startsWith("https://wa.me/584123307641?") && msg.includes(id1) && msg.includes("Cristal Ámbar") && msg.includes("Talla XL") &&
-    msg.includes("Total: $320.00 + envío") && msg.includes("Método de pago: Binance") && msg.includes("Los Samanes"), msg.split("\n").slice(0, 3).join(" / "));
+    href.startsWith("https://wa.me/584123307641?") && msg.includes(id1) && msg.includes("Cristal Ámbar") && msg.includes("2 × Gafas de Sol — Cristal Negro") &&
+    msg.includes("Total: $140.00 + envío") && msg.includes("Método de pago: Binance") && msg.includes("Los Samanes"), msg.split("\n").slice(0, 3).join(" / "));
 
   // 8. Nada marca el pedido como pagado; el carrito sigue lleno hasta confirmar el envío.
   const st = await page.textContent(".status");
@@ -138,31 +138,34 @@ async function fillCheckout(page, data = {}) {
     /Por enviar/.test(st) && cartBefore === "6" && /esperando confirmación/.test(st2) && cartAfter && !paid, `${st} → ${st2}`);
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/orden-desk.png` });
 
-  // 2b. Dos suéteres con tallas distintas, y cambio de talla por unidad en el carrito.
+  // 2b. Dos pares de lentes con colores distintos; en el carrito se cambia una unidad sin tocar la otra.
   page = await newPage();
-  await page.goto(base + "#/producto/polo/L");
+  await page.goto(base + "#/producto/lentes/ambar");
   await page.click('[data-q="1"]');
   const rows2 = await page.locator(".unit").count();
-  await page.click('[data-unit="0"][data-opt="S"]');
-  await page.click('[data-unit="1"][data-opt="M"]');
+  await page.click('[data-unit="0"][data-opt="ambar"]');
+  await page.click('[data-unit="1"][data-opt="azul"]');
   await page.click("#add");
   const cartOf = () => page.evaluate(() => JSON.parse(localStorage.getItem("tienda-cart")).items.map((l) => `${l.option}${l.qty}`).join(" "));
   const c1 = await cartOf();
   await page.goto(base + "#/carrito");
-  await page.click('.line[data-product="polo"] [data-unit="1"][data-opt="L"]');
+  await page.click('.line[data-product="lentes"] [data-unit="1"][data-opt="ambar"]');
   const c2 = await cartOf();
-  await page.click('.line[data-product="polo"] [data-unit="0"][data-opt="L"]');
+  await page.click('.line[data-product="lentes"] [data-unit="0"][data-opt="azul"]');
   const c3 = await cartOf();
   const sum2 = await page.textContent(".totals div:first-child span:last-child");
-  check("2b. Cada suéter con su talla: S + M en la ficha; en el carrito se cambia una unidad sin tocar la otra",
-    rows2 === 2 && c1 === "S1 M1" && c2 === "S1 L1" && c3 === "L2" && sum2 === "$240.00", `filas=${rows2} | ${c1} → ${c2} → ${c3} | ${sum2}`);
+  await page.goto(base + "#/producto/gafas/negro"); await page.click('[data-q="1"]');
+  const gafasPickers = await page.locator("#units .chip").count();
+  check("2b. Cada par con su color: ámbar + azul; cambiar una unidad no toca la otra; las gafas (un solo color) no muestran selector",
+    rows2 === 2 && c1 === "ambar1 azul1" && c2 === "ambar2" && c3 === "ambar1 azul1" && sum2 === "$40.00" && gafasPickers === 0,
+    `filas=${rows2} | ${c1} → ${c2} → ${c3} | ${sum2} | chips gafas=${gafasPickers}`);
 
   // Bolívares: precio en dólares × tasa euro BCV de rate.json; una tasa vieja no se muestra.
   const today = new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10);
   const ddmm = today.split("-").reverse().join("/");
   page = await newPage();
   await page.route("**/rate.json", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ currency: "EUR", source: "BCV", rate: 500, date: today }) }));
-  await page.goto(base + "#/producto/polo/L");
+  await page.goto(base + "#/producto/gafas/negro");
   await page.waitForSelector(".bs-big:not([hidden])");
   const bsPolo = await page.textContent(".bs-big");
   await page.click('[data-q="1"]'); await page.click("#add");
@@ -174,27 +177,27 @@ async function fillCheckout(page, data = {}) {
   const bsMsg = decodeURIComponent((await page.getAttribute("#send", "href")).split("text=")[1]);
   const pmOrder = await page.textContent(".pm-order");
   check("Bs. Monto en bolívares a tasa euro en ficha, carrito y mensaje de WhatsApp",
-    bsPolo === "Bs. 60.000,00" && bsCart === "Bs. 120.000,00" && bsMsg.includes(`Total en bolívares: Bs. 120.000,00 + envío (tasa euro BCV 500,00 del ${ddmm})`) &&
-    /0412-3307641/.test(pmOrder) && /Bs\. 120\.000,00/.test(pmOrder),
+    bsPolo === "Bs. 15.000,00" && bsCart === "Bs. 30.000,00" && bsMsg.includes(`Total en bolívares: Bs. 30.000,00 + envío (tasa euro BCV 500,00 del ${ddmm})`) &&
+    /0412-3307641/.test(pmOrder) && /Bs\. 30\.000,00/.test(pmOrder),
     `${bsPolo} | ${bsCart} | ${bsMsg.split("\n").find((l) => l.includes("bolívares"))}`);
 
   page = await newPage();
   const old = new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10);
   await page.route("**/rate.json", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ rate: 500, date: old }) }));
-  await page.goto(base + "#/producto/polo/L"); await page.waitForTimeout(400);
+  await page.goto(base + "#/producto/gafas/negro"); await page.waitForTimeout(400);
   check("Bs. Una tasa de hace 10 días no se muestra", await page.isHidden(".bs-big"));
 
   // 4. Variante agotada no se puede comprar; un carrito con ella no avanza.
   page = await newPage();
-  await withConfig(page, (b) => b.replace('w: 666, h: 737, available: true,', 'w: 666, h: 737, available: s !== "S",'));
-  await page.goto(base + "#/producto/polo/S");
+  await withConfig(page, (b) => b.replace('w: 742, h: 317, available: true', 'w: 742, h: 317, available: false'));
+  await page.goto(base + "#/producto/lentes/azul");
   const disabled = await page.isDisabled("#add");
   const soldTxt = await page.textContent("#sold-msg");
-  await page.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "polo", option: "S", qty: 1 }] })));
+  await page.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "lentes", option: "azul", qty: 1 }] })));
   await page.goto(base + "#/carrito"); await page.reload();
   const blocked = await page.getAttribute("#next", "aria-disabled");
   await page.click("#next", { force: true });
-  check("4. Talla agotada: no se puede agregar y bloquea el checkout", disabled && /agotado/.test(soldTxt) && blocked === "true" && page.url().endsWith("#/carrito"), soldTxt);
+  check("4. Color agotado: no se puede agregar y bloquea el checkout", disabled && /agotado/.test(soldTxt) && blocked === "true" && page.url().endsWith("#/carrito"), soldTxt);
 
   // 6b. Con una zona configurada, el envío entra en el total.
   page = await newPage();
@@ -217,9 +220,9 @@ async function fillCheckout(page, data = {}) {
   for (const w of widths) {
     const p = await newPage({ viewport: { width: w, height: 900 } });
     await p.goto(base);
-    await p.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "polo", option: "XXL", qty: 3 }, { product: "lentes", option: "ambar", qty: 1 }] })));
+    await p.evaluate(() => localStorage.setItem("tienda-cart", JSON.stringify({ items: [{ product: "gafas", option: "negro", qty: 3 }, { product: "lentes", option: "ambar", qty: 1 }] })));
     await p.reload();
-    for (const h of ["#/", "#/producto/lentes/azul", "#/producto/polo/L", "#/carrito", "#/pedido"]) {
+    for (const h of ["#/", "#/producto/lentes/azul", "#/producto/gafas/negro", "#/carrito", "#/pedido"]) {
       await p.goto(base + h); await p.waitForTimeout(150);
       const sw = await p.evaluate(() => document.documentElement.scrollWidth);
       if (sw > w) overflow.push(`${w}px ${h}: ${sw}`);

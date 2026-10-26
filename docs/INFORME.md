@@ -1,5 +1,7 @@
 # Tienda — informe de mejoras
 
+> Nota: el Quarter Zip Polo Ralph Lauren se retiró del catálogo y lo reemplazan las Gafas de Sol con cristal negro ($30). Las menciones al suéter en este informe describen el trabajo de ese momento.
+
 Fecha: 26 de octubre de 2026. Alcance: bloques A, B, D, E y F del plan maestro. El bloque C (backend) queda como propuesta, porque necesita tu aprobación y decidir dónde alojarlo.
 
 ## Bloque A — Auditoría del estado inicial

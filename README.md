@@ -1,6 +1,6 @@
 # chokopro
 
-Tienda online: lentes blue light y Quarter Zip Polo Ralph Lauren, con pedidos por WhatsApp.
+Tienda online: lentes blue light y gafas de sol, con pedidos por WhatsApp.
 
 ## Skills de diseño (`.claude/skills/`)
 
