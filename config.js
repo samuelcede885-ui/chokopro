@@ -73,7 +73,7 @@ const CATALOG = {
     optionPrefix: "Cristal",
     unitLabel: "Par",
     options: [
-      { id: "ambar", label: "Ámbar", swatch: "#f6a21a", img: "assets/lentes-ambar.webp", w: 695, h: 352, available: true },
+      { id: "ambar", label: "Ámbar", swatch: "#f5c842", img: "assets/lentes-ambar.webp", w: 1179, h: 464, available: true },
       { id: "azul", label: "Azul", swatch: "#5a8fd6", img: "assets/lentes-azul.webp", w: 742, h: 317, available: true },
     ],
     description:
