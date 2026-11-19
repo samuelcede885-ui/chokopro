@@ -1,8 +1,8 @@
 {
   "currency": "EUR",
   "source": "BCV",
-  "rate": 1007.3867,
-  "date": "2026-11-18",
-  "fetchedAt": "2026-11-18T21:25:56.577Z",
+  "rate": 1007.3958,
+  "date": "2026-11-19",
+  "fetchedAt": "2026-11-19T21:32:14.921Z",
   "via": "ve.dolarapi.com"
 }
